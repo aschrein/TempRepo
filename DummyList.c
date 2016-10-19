@@ -34,7 +34,7 @@ Error createList( List **plist , Allocator allocator )
 }
 Error destroyList( List **plist )
 {
-	if( plist == NULL )
+	if( plist == NULL || *plist == NULL )
 	{
 		return INVALID_LIST;
 	}
@@ -88,11 +88,11 @@ Error appendBack( List *list , void *content )
 	}
 	ListNode *tail = findTail( list->head );
 	tail->next = createNode( content , list->allocator );
-	list->length++;
 	if( tail->next == NULL )
 	{
 		return ALLOC_ERROR;
 	}
+	list->length++;
 	return SUCCESS;
 }
 Error removeFirstWithContent( List *list , void *content )
@@ -101,7 +101,6 @@ Error removeFirstWithContent( List *list , void *content )
 	{
 		return INVALID_LIST;
 	}
-	
 	if( list->head->content == content )
 	{
 		ListNode *next = list->head->next;
