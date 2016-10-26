@@ -21,7 +21,7 @@ Complex divr( Complex a , Real r )
 {
 	if( ABS( r ) < EPS )
 	{
-		return ( Complex ){ ( Real )0 , ( Real )0 };
+		return ( Complex ){ NAN , NAN };
 	}
 	return ( Complex ){ a.r / r , a.i / r };
 }
@@ -79,7 +79,7 @@ int main( int argc , char **argv )
 	printComplexExponent( expComplex(
 		mul( ( Complex ){ 1.0f , 1.0f } , ( Complex ){ 1.0f , -1.0f } )
 	) );//2.000000 * e^i0.000000
-
+	printComplex( divr( ( Complex ){ 1.0f , 1.0f } , 0 ) );//{ r: NAN i: NAN }
 	printComplex( mul( ( Complex ){ 1.0f , 1.0f } , ( Complex ){ 1.0f , -1.0f } ) );//{ r: 2.000000 i: 0.000000 }
 	printComplex( sub( ( Complex ){ 1.0f , 1.0f } , ( Complex ){ 1.0f , -1.0f } ) );//{ r: 0.000000 i: 2.000000 }
 	printComplex( add( ( Complex ){ 1.0f , 1.0f } , ( Complex ){ 1.0f , -1.0f } ) );//{ r: 2.000000 i: 0.000000 }
