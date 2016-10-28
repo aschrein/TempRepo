@@ -14,6 +14,8 @@ Complex add( Complex , Complex );
 Complex sub( Complex , Complex );
 Complex mul( Complex , Complex );
 Complex div( Complex , Complex );
+void printComplex( Complex );
+void printComplexExponent( ComplexExp );
 typedef struct
 {
 	Real mag , angle;
