@@ -5,6 +5,9 @@
 #define ABS fabs
 #define EPS 1.0e-37f
 #define ATAN2 atan2f
+#define test_def\
+blah\
+blah
 Real mod2( Complex a )
 {
 	return a.r * a.r + a.i * a.i;
