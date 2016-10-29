@@ -3,19 +3,19 @@ typedef struct
 {
 	Real r , i;
 } Complex;
-Real mod2( Complex );
-Real mod( Complex );
-Complex mulr( Complex , Real );
-Complex divr( Complex , Real );
-Complex neg( Complex );
-Complex inv( Complex );
-Complex conjugate( Complex );
-Complex add( Complex , Complex );
-Complex sub( Complex , Complex );
-Complex mul( Complex , Complex );
-Complex div( Complex , Complex );
-void printComplex( Complex );
-void printComplexExponent( ComplexExp );
+Real c_mod2( Complex );
+Real c_mod( Complex );
+Complex c_mulr( Complex , Real );
+Complex c_divr( Complex , Real );
+Complex c_neg( Complex );
+Complex c_inv( Complex );
+Complex c_conjugate( Complex );
+Complex c_add( Complex , Complex );
+Complex c_sub( Complex , Complex );
+Complex c_mul( Complex , Complex );
+Complex c_div( Complex , Complex );
+void c_printComplex( Complex );
+void c_printComplexExponent( ComplexExp );
 typedef struct
 {
 	Real mag , angle;

@@ -1,15 +1,25 @@
-
-MODULES_SRC := $(wildcard plugins/*.c)
-OBJECTS := $(patsubst %.c, %.o, $(MODULES_SRC))
-MODULES := $(patsubst %.c, %.so, $(MODULES_SRC))
-HEADERS := $(wildcard)
-all : main
-main : main.c $(MODULES)
-	gcc main.c -w -lX11 -ldl -o main
-%.so : %.o
-	gcc -shared  -o $@ $<
-%.o : %.c $(HEADERS)
-	gcc -w -Wl,--hash-style=sysv -fPIC -Iinclude -c -o $@ $<
+HEADERS := $(wildcard include/*.h)
+TMP_DIR := tmp
+SRC_DIR := src
+OUT_DIR := build
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(patsubst $(SRC_DIR)/%.c, $(TMP_DIR)/%.o, $(SRC))
+all : directories main plugins
+directories: $(TMP_DIR) $(OUT_DIR)
+$(TMP_DIR):
+	mkdir $@
+$(OUT_DIR):
+	mkdir $@	
+plugins: Complex.c Src2Mod.py
+	python Src2Mod.py Complex.c
+	cd modules && make
+main: $(OBJ) $(HEADERS)
+	gcc $(OBJ) -w -lX11 -ldl -o $(OUT_DIR)/main
+$(OBJ): $(TMP_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
+	gcc -w -Wl,--hash-style=sysv -Iinclude -c -o $@ $<
 clean:
-	rm -f *.o *.a plugins/*.o plugins/*.so main
+	rm -r $(TMP_DIR)  $(OUT_DIR)/main
+	cd modules && make clean
+	cd modules && find . -name '*.c' -delete
+	rm -r $(OUT_DIR)
 print-%: ; @echo $*=$($*)

@@ -1,7 +1,7 @@
 import sys , os
 src_filename = str( sys.argv[ 1 ] )
 try:
-	os.mkdir( "plugins" )
+	os.mkdir( "modules" )
 except Exception:
 	pass
 defines = ""
@@ -47,7 +47,7 @@ src_file.close()
 for function_text in function_texts:
 	name = function_text.split( "(" )[ 0 ].split( " " )[ 1 ].replace( " " , "" )
 	print name
-	f = open( "plugins" + "/" + name + ".c" , "wb" )
+	f = open( "modules" + "/" + name + ".c" , "wb" )
 	f.write( defines + function_text )
 	f.close()
 
