@@ -35,7 +35,8 @@ typedef struct
 	Module *modules_head;
 	ModuleDependency *dependency_head;
 } ModuleSystem;
-void releaseModule( ModuleSystem * ,  Module * );
+void releaseModule( Module * , ModuleSystem * );
+void releaseModuleByName( char const * ,  ModuleSystem * );
 static char const * const MODULES_DIR = "modules";
-int loadModule( char const * , ModuleSystem * );
+Module *loadModule( char const * , ModuleSystem * );
 #endif

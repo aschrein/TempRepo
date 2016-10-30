@@ -3,6 +3,13 @@
 #include <link.h>
 #include <dlfcn.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <fcntl.h>
+#ifdef DEBUG
+#define LOG( ... ) printf( __VA_ARGS__ )
+#else
+#define LOG( ... )
+#endif
 //ElfW( Sym )
 void strcopy( char *dst , char const *src )
 {
@@ -19,15 +26,24 @@ void removeDependencies( ModuleSystem *system ,  Module *module )
 			{
 				ModuleDependency *next = dep->next;
 				dep->prev->next = next;
+				if( next )
+				{
+					next->prev = dep->prev->next;
+				}
 				system->allocator->free( dep );
 				dep = next;
 				continue;
 			} else
 			{
 				ModuleDependency *next = dep->next;
+				if( next )
+				{
+					next->prev = NULL;
+				}
 				system->dependency_head = next;
 				system->allocator->free( dep );
 				dep = next;
+				continue;
 			}
 		}
 		dep = dep->next;
@@ -43,48 +59,90 @@ void releaseDependantModules( ModuleSystem *system ,  Module *module )
 	{
 		if( dep->src == module )
 		{
-			releaseModule( system , dep->dst );
+			LOG( "found dependant module:%s\n" , dep->dst->name );
+			releaseModule(  dep->dst , system );
 			goto dep_again;
 		}
 		dep = dep->next;
 	}
 }
-void releaseModule( ModuleSystem *system ,  Module *module )
+void releaseModule( Module *module , ModuleSystem *system )
 {
-	dlclose( module->lib_handle );
 	int i;
 	if( module->prev )
 	{
 		module->prev->next = module->next;
+		
 	} else
 	{
 		system->modules_head = module->next;
 	}
+	if( module->next )
+	{
+		module->next->prev = module->prev;
+	}
+	LOG( "removed from list\n" );
 	removeDependencies( system , module );
+	LOG( "dependencies removed\n" );
 	releaseDependantModules( system , module );
+	LOG( "dependant modules removed\n" );
 	/*for( i = 0; i < module->methods_count; i++ )
 	{
 		system->allocator->free( module->methods[ i ].arg_desc );
 	}*/
+	dlclose( module->lib_handle );
+	LOG( "library handler disposed\n" );
 	system->allocator->free( module->methods );
 	system->allocator->free( module );
 }
-void loadDependency( char const *name , ModuleSystem *system )
+int strCmp( char const *a , char const *b )
+{
+	//printf( "comparing %c and %c\n" , *a , *b );
+	while( *a != '\0' && *a++ == *b++ )
+	{
+		//printf( "comparing %c and %c\n" , *a , *b );
+	}
+	return *a == *b && *b == '\0';
+}
+void releaseModuleByName( char const *m_name ,  ModuleSystem *system )
+{
+	Module *m = system->modules_head;
+	while( m )
+	{
+		if( strCmp( m->name , m_name ) )
+		{
+			releaseModule( m , system );
+			return;
+		}
+		m = m->next;
+	}
+}
+ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )
 {
 	char full_name[ 0x100 ] = "modules/";
 	int i;
-	for( i = 0; i < strlen( name ); i++ )
+	for( i = 0; i < strlen( dst->name ); i++ )
 	{
-		full_name[ i + 8 ] = name[ i ];
+		full_name[ i + 8 ] = dst->name[ i ];
 	}
+	
 	int name_len = strlen( full_name );
 	full_name[ name_len - 2 ] = 'd';
 	full_name[ name_len - 1 ] = 'e';
 	full_name[ name_len ] = 'p';
 	full_name[ name_len + 1 ] = '\0';
-	int dep_fd = open( name_len , O_RDONLY );
+	LOG( "trying to load dependency file:%s\n" , full_name );
+	int dep_fd = open( full_name , O_RDONLY );
+	
+	int dep_counter = 0;
 	if( dep_fd > 0 )
 	{
+		ModuleDependency *dep_tail = system->dependency_head;
+		while( dep_tail && dep_tail->next )
+		{
+			dep_tail = dep_tail->next;
+		}
+		LOG( "success!\n" );
 		while( 1 )
 		{
 			char c;
@@ -92,8 +150,7 @@ void loadDependency( char const *name , ModuleSystem *system )
 			int name_len = 0;
 			while( ( read_len = read( dep_fd , &c , 1 ) ) && c != '\n' )
 			{
-				
-				full_name[ i + 8 + name_len++ ] = c;
+				full_name[ name_len++ ] = c;
 			}
 			if( name_len )
 			{
@@ -101,7 +158,26 @@ void loadDependency( char const *name , ModuleSystem *system )
 				full_name[ name_len + 1 ] = 's';
 				full_name[ name_len + 2 ] = 'o';
 				full_name[ name_len + 3 ] = '\0';
-				loadModule( full_name , system );
+				LOG( "trying to load module:%s\n" , full_name );
+				Module *m = loadModule( full_name , system );
+				if( m )
+				{
+					dep_counter++;
+					ModuleDependency *dep = system->allocator->alloc( sizeof( ModuleDependency ) );
+					dep->next = NULL;
+					dep->prev = dep_tail;
+					dep->src = m;
+					dep->dst = dst;
+					if( dep_tail )
+					{
+						dep_tail->next = dep;
+					} else
+					{
+						system->dependency_head = dep;
+					}
+					
+					dep_tail = dep;
+				}
 			} else
 			{
 				break;
@@ -110,9 +186,11 @@ void loadDependency( char const *name , ModuleSystem *system )
 		close( dep_fd );
 	}
 }
-int loadModule( char const *name , ModuleSystem *system )
+Module *loadModule( char const *name , ModuleSystem *system )
 {
-	loadDependency( name , system );
+	Module *out = ( Module* )system->allocator->alloc( sizeof( Module ) );
+	strcopy( out->name , name );
+	loadDependency( out , system );
 	char full_name[ 0x100 ] = "modules/";
 	int i;
 	for( i = 0; i < strlen( name ); i++ )
@@ -124,7 +202,9 @@ int loadModule( char const *name , ModuleSystem *system )
 	if( !lib )
 	{
 		printf( "error loadding library:%s\n" , dlerror() );
-		return -1;
+		removeDependencies( system , out );
+		system->allocator->free( out );
+		return NULL;
 	}
 	struct link_map *link_map;
 	//2 means RTLD_DI_LINKMAP
@@ -181,9 +261,12 @@ int loadModule( char const *name , ModuleSystem *system )
 	|| !symbol_table_entry
 	)
 	{
-		printf( "could not pull unavoidable structs from module %s\n" , name );
+		LOG( "could not pull unavoidable structs from module %s\n" , name );
 		dlclose( lib );
-		return -1;
+		removeDependencies( system , out );
+		system->allocator->free( out );
+		
+		return NULL;
 	}
 	//printf( "symbols count: %p , strings count: %i\n" , symbol_table_size , string_table_size );
 	//printf( "symbols entry: %p , strings entry: %p\n" , symbol_table_entry , string_table_entry );
@@ -231,9 +314,9 @@ int loadModule( char const *name , ModuleSystem *system )
 			}
 		}
 	}
-	Module *out = ( Module* )system->allocator->alloc( sizeof( Module ) );
+	
 	out->lib_handle = lib;
-	strcopy( out->name , name );
+	
 	out->methods_count = export_symbols_count;
 	out->methods = ( Method* )system->allocator->alloc( sizeof( Method ) * export_symbols_count );
 	out->next = NULL;
@@ -254,7 +337,7 @@ int loadModule( char const *name , ModuleSystem *system )
 		m->next = out;
 		out->prev = m;
 	}
-	return 0;
+	return out;
 	//symbol_table_size = ;
 	
 }
