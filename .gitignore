@@ -2,5 +2,7 @@
 *.a
 *.o
 *.so
-plugins/
+*.dep
+modules/
+build/
 main

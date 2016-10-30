@@ -1,4 +1,4 @@
-import sys , os
+import sys , os , commands
 src_filename = str( sys.argv[ 1 ] )
 try:
 	os.mkdir( "modules" )
@@ -44,10 +44,27 @@ while True:
 	if c == '{':
 		brace_counter += 1
 src_file.close()
+def getDependencies( src_filename ):
+	command = """gcc -Iinclude """ + src_filename + """ 2>&1 | grep undefined | sed -r \"s|.*[\\'\`]([^\`\\']+)[\\'\`].*|\\1|\" | grep -v main"""
+	output = commands.getoutput( command )
+	#print command
+	#print output
+	if not output or output == "":
+		return None
+	return output.split( "\n" )
 for function_text in function_texts:
 	name = function_text.split( "(" )[ 0 ].split( " " )[ 1 ].replace( " " , "" )
 	print name
-	f = open( "modules" + "/" + name + ".c" , "wb" )
+	src_file = "modules/" + name + ".c"
+	f = open( src_file , "wb" )
 	f.write( defines + function_text )
 	f.close()
+	dep = getDependencies( src_file )
+	if not dep == None:
+		f = open( src_file.replace( ".c" , ".dep" ) , "wb" )
+		for line in dep:
+			f.write( line + "\n" )
+		f.close()
+	#print 
+	
 

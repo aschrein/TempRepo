@@ -12,7 +12,7 @@ void releaseModule( Module *module )
 }
 Module *loadModule( char const *name , Allocator allocator )
 {
-	void *lib = dlopen( name , RTLD_NOW );
+	void *lib = dlopen( name , RTLD_NOW | RTLD_GLOBAL );
 	if( !lib )
 	{
 		printf( "error loadding library:%s\n" , dlerror() );
