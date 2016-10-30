@@ -21,5 +21,6 @@ clean:
 	rm -r $(TMP_DIR)  $(OUT_DIR)/main
 	cd modules && make clean
 	cd modules && find . -name '*.c' -delete
+	cd modules && find . -name '*.dep' -delete
 	rm -r $(OUT_DIR)
 print-%: ; @echo $*=$($*)

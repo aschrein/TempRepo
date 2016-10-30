@@ -25,11 +25,27 @@ int main( int argc , char **argv )
 		.alloc = malloc ,
 		.realloc = realloc
 	};
-	Module *module0 = loadModule( "modules/c_conjugate.so" , allocator );
-	Module *module1 = loadModule( "modules/c_mod2.so" , allocator );
-	Module *module2 = loadModule( "modules/c_divr.so" , allocator );
-	Module *module3 = loadModule( "modules/c_inv.so" , allocator );
-	
+	ModuleSystem system =
+	{
+		.allocator = &allocator ,
+		.modules_head = NULL ,
+		.dependency_head = NULL
+	};
+	//loadModule( "c_conjugate.so" , &system );
+	//loadModule( "c_mod2.so" , &system );
+	//loadModule( "c_divr.so" , &system );
+	loadModule( "c_inv.so" , &system );
+	Module *m = system.modules_head;
+	while( m )
+	{
+		printf( "%s:\n" , m->name );
+		int i = 0;
+		for(; i < m->methods_count; i++ )
+		{
+			printf( "...%s(...);\n" , m->methods[ i ].name );
+		}
+		m = m->next;
+	}
 	////
 	/*while( 1 )
 	{

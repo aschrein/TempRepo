@@ -2,22 +2,40 @@
 #define MODULES_H
 #include <stdint.h>
 #include <stdlib.h>
+#include <Allocator.h>
+/*typedef struct
+{
+	char type[ 0x10 ];
+	char name[ 0x10 ];
+} ArgDesc;*/
 typedef struct
 {
-	void ( *free )( void * );
-	void ( *alloc )( size_t );
-	void ( *realloc )( void * , size_t );
-} Allocator;
-typedef struct
+	//ArgDesc *arg_desc;
+	char name[ 0x10 ];
+	void *ptr;
+	//uint32_t arg_count;
+} Method;
+typedef struct Module_t
 {
+	char name[ 0x10 ];
+	Method *methods;
 	void *lib_handle;
-	size_t string_table_size;
-	char const *string_table_entry;
-	Allocator allocator;
-	void const *symbol_table_entry;
-	uint32_t export_symbols_count;
-	uint32_t export_symbols[];
+	struct Module_t *next , *prev;
+	uint32_t methods_count;
 } Module;
-void releaseModule( Module * );
-Module *loadModule( char const * , Allocator );
+typedef struct ModuleDependency_t
+{
+	Module *src;
+	Module *dst;
+	struct ModuleDependency_t *next , *prev;
+} ModuleDependency;
+typedef struct
+{
+	Allocator *allocator;
+	Module *modules_head;
+	ModuleDependency *dependency_head;
+} ModuleSystem;
+void releaseModule( ModuleSystem * ,  Module * );
+static char const * const MODULES_DIR = "modules";
+int loadModule( char const * , ModuleSystem * );
 #endif
