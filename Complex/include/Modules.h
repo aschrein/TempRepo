@@ -37,6 +37,7 @@ typedef struct
 } ModuleSystem;
 void releaseModule( Module * , ModuleSystem * );
 void releaseModuleByName( char const * ,  ModuleSystem * );
+Module *getModuleByName( char const * , ModuleSystem *system );
 static char const * const MODULES_DIR = "modules";
 Module *loadModule( char const * , ModuleSystem * );
 #endif

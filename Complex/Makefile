@@ -14,7 +14,7 @@ plugins: Complex.c Src2Mod.py
 	python Src2Mod.py Complex.c
 	cd modules && make
 main: $(OBJ) $(HEADERS)
-	gcc $(OBJ) -w -lX11 -ldl -o $(OUT_DIR)/main
+	gcc $(OBJ) -w -lX11 -ldl -lm -o $(OUT_DIR)/main
 $(OBJ): $(TMP_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
 	gcc -w -Wl,--hash-style=sysv -Iinclude -c -o $@ $<
 clean:

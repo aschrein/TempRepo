@@ -5,13 +5,14 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
+#define DEBUG
 #ifdef DEBUG
 #define LOG( ... ) printf( __VA_ARGS__ )
 #else
 #define LOG( ... )
 #endif
 //ElfW( Sym )
-void strcopy( char *dst , char const *src )
+static inline void strcopy( char *dst , char const *src )
 {
 	while( *dst++ = *src++ );
 }
@@ -22,6 +23,7 @@ void removeDependencies( ModuleSystem *system ,  Module *module )
 	{
 		if( dep->dst == module )
 		{
+			LOG( "removing dependency %s->%s\n" , dep->src , dep->dst );
 			if( dep->prev )
 			{
 				ModuleDependency *next = dep->next;
@@ -69,10 +71,10 @@ void releaseDependantModules( ModuleSystem *system ,  Module *module )
 void releaseModule( Module *module , ModuleSystem *system )
 {
 	int i;
+	LOG( "disposing module %s\n" , module->name );
 	if( module->prev )
 	{
 		module->prev->next = module->next;
-		
 	} else
 	{
 		system->modules_head = module->next;
@@ -81,17 +83,17 @@ void releaseModule( Module *module , ModuleSystem *system )
 	{
 		module->next->prev = module->prev;
 	}
-	LOG( "removed from list\n" );
+	LOG( "removed %s from list\n" , module->name );
 	removeDependencies( system , module );
-	LOG( "dependencies removed\n" );
+	LOG( "%s dependencies removed\n" , module->name );
 	releaseDependantModules( system , module );
-	LOG( "dependant modules removed\n" );
+	LOG( "%s dependant modules removed\n" , module->name );
 	/*for( i = 0; i < module->methods_count; i++ )
 	{
 		system->allocator->free( module->methods[ i ].arg_desc );
 	}*/
 	dlclose( module->lib_handle );
-	LOG( "library handler disposed\n" );
+	LOG( "%s library handler disposed\n" , module->name );
 	system->allocator->free( module->methods );
 	system->allocator->free( module );
 }
@@ -104,17 +106,25 @@ int strCmp( char const *a , char const *b )
 	}
 	return *a == *b && *b == '\0';
 }
-void releaseModuleByName( char const *m_name ,  ModuleSystem *system )
+Module *getModuleByName( char const *m_name , ModuleSystem *system )
 {
 	Module *m = system->modules_head;
 	while( m )
 	{
 		if( strCmp( m->name , m_name ) )
 		{
-			releaseModule( m , system );
-			return;
+			return m;
 		}
 		m = m->next;
+	}
+	return NULL;
+}
+void releaseModuleByName( char const *m_name , ModuleSystem *system )
+{
+	Module *m = getModuleByName( m_name , system );
+	if( m )
+	{
+		releaseModule( m , system );
 	}
 }
 ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )

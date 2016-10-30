@@ -13,7 +13,7 @@ typedef struct
 ivec2 getDeltaMouse( void * );
 typedef enum
 {
-	NONE , PRESS , DOWN , UP
+	PM_NONE , PM_PRESS , PM_DOWN , PM_UP , PM_DRAG , PM_LCLICK , PM_RCLICK
 } PressMode;
 void fillRect( void * , int x , int y , char const *text );
 PressMode drawButton( void * , int x , int y , int width , int height );
