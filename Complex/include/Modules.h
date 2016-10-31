@@ -11,13 +11,13 @@
 typedef struct
 {
 	//ArgDesc *arg_desc;
-	char name[ 0x10 ];
+	char name[ 0x20 ];
 	void *ptr;
 	//uint32_t arg_count;
 } Method;
 typedef struct Module_t
 {
-	char name[ 0x10 ];
+	char name[ 0x20 ];
 	Method *methods;
 	void *lib_handle;
 	struct Module_t *next , *prev;

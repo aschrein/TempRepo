@@ -5,11 +5,12 @@ OUT_DIR := build
 SRC := $(wildcard $(SRC_DIR)/*.c)
 OBJ := $(patsubst $(SRC_DIR)/%.c, $(TMP_DIR)/%.o, $(SRC))
 all : directories main plugins
+	cd build && ./main
 directories: $(TMP_DIR) $(OUT_DIR)
 $(TMP_DIR):
 	mkdir $@
 $(OUT_DIR):
-	mkdir $@	
+	mkdir $@
 plugins: Complex.c Src2Mod.py
 	python Src2Mod.py Complex.c
 	cd modules && make

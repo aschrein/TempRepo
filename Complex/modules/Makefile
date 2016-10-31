@@ -18,7 +18,7 @@ $(MODULES_DIR):
 	mkdir -p $@
 $(PLUGINS): $(MODULES_DIR)/%.so: $(TMP_DIR)/%.o $(MODULES_DIR)
 	gcc -shared -o $@ $<
-$(OBJECTS): $(TMP_DIR)/%.o: %.c $(HEADERS)  $(TMP_DIR) 
+$(OBJECTS): $(TMP_DIR)/%.o: %.c $(HEADERS)  $(TMP_DIR)
 	gcc -w -Wl,--hash-style=sysv -fpic -I$(INCLUDE_DIR) -c -o $@ $<
 clean:
 	rm -r $(TMP_DIR) $(MODULES_DIR)

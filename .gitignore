@@ -3,6 +3,9 @@
 *.o
 *.so
 *.dep
-modules/
+tmp/
+*/modules/*.c
+*/modules/tmp
+*/modules/*.dep
 build/
 main

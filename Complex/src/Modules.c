@@ -53,16 +53,17 @@ void removeDependencies( ModuleSystem *system ,  Module *module )
 }
 void releaseDependantModules( ModuleSystem *system ,  Module *module )
 {
-	
 	ModuleDependency *dep;
 	dep_again:
 	dep = system->dependency_head;
 	while( dep )
 	{
+		LOG( "check dependency %s->%s \n" , dep->src , dep->dst );
 		if( dep->src == module )
 		{
 			LOG( "found dependant module:%s\n" , dep->dst->name );
 			releaseModule(  dep->dst , system );
+			LOG( "searching to another dependant module for:%s\n" , module->name );
 			goto dep_again;
 		}
 		dep = dep->next;
@@ -135,7 +136,7 @@ ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )
 	{
 		full_name[ i + 8 ] = dst->name[ i ];
 	}
-	
+
 	int name_len = strlen( full_name );
 	full_name[ name_len - 2 ] = 'd';
 	full_name[ name_len - 1 ] = 'e';
@@ -143,15 +144,10 @@ ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )
 	full_name[ name_len + 1 ] = '\0';
 	LOG( "trying to load dependency file:%s\n" , full_name );
 	int dep_fd = open( full_name , O_RDONLY );
-	
+
 	int dep_counter = 0;
 	if( dep_fd > 0 )
 	{
-		ModuleDependency *dep_tail = system->dependency_head;
-		while( dep_tail && dep_tail->next )
-		{
-			dep_tail = dep_tail->next;
-		}
 		LOG( "success!\n" );
 		while( 1 )
 		{
@@ -168,12 +164,35 @@ ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )
 				full_name[ name_len + 1 ] = 's';
 				full_name[ name_len + 2 ] = 'o';
 				full_name[ name_len + 3 ] = '\0';
-				LOG( "trying to load module:%s\n" , full_name );
-				Module *m = loadModule( full_name , system );
+				LOG( "trying to resolve dependency:%s\n" , full_name );
+				Module *m = system->modules_head;
+				while( m )
+				{
+					//LOG( "compare:%s and %s\n" , m->name , full_name );
+					if( strCmp( m->name , full_name ) )
+					{
+						break;
+					}
+					m = m->next;
+				}
+				if( m && strCmp( m->name , full_name ) )
+				{
+					LOG( "module dependency:%s already loaded. using it\n" , full_name );
+				} else
+				{
+					LOG( "module dependency:%s is not loaded. loadding it\n" , full_name );
+					m = loadModule( full_name , system );
+				}
 				if( m )
 				{
+					ModuleDependency *dep_tail = system->dependency_head;
+					while( dep_tail && dep_tail->next )
+					{
+						dep_tail = dep_tail->next;
+					}
 					dep_counter++;
 					ModuleDependency *dep = system->allocator->alloc( sizeof( ModuleDependency ) );
+					LOG( "inserting dependency:%s->%s\n" , full_name , dst->name );
 					dep->next = NULL;
 					dep->prev = dep_tail;
 					dep->src = m;
@@ -185,7 +204,7 @@ ModuleDependency *loadDependency( Module *dst , ModuleSystem *system )
 					{
 						system->dependency_head = dep;
 					}
-					
+
 					dep_tail = dep;
 				}
 			} else
@@ -207,7 +226,7 @@ Module *loadModule( char const *name , ModuleSystem *system )
 	{
 		full_name[ i + 8 ] = name[ i ];
 	}
-	
+
 	void *lib = dlopen( full_name , RTLD_NOW | RTLD_GLOBAL );
 	if( !lib )
 	{
@@ -233,7 +252,7 @@ Module *loadModule( char const *name , ModuleSystem *system )
 		while( dynamic_section_entry->d_tag != DT_NULL )
 		{
 			//printf( "tag found:%p\n" , dynamic_section_entry->d_tag );
-			
+
 			switch( dynamic_section_entry->d_tag )
 			{
 				case DT_STRTAB:
@@ -275,12 +294,12 @@ Module *loadModule( char const *name , ModuleSystem *system )
 		dlclose( lib );
 		removeDependencies( system , out );
 		system->allocator->free( out );
-		
+
 		return NULL;
 	}
 	//printf( "symbols count: %p , strings count: %i\n" , symbol_table_size , string_table_size );
 	//printf( "symbols entry: %p , strings entry: %p\n" , symbol_table_entry , string_table_entry );
-	
+
 	/*
 	* extracting valid symbols through GNU_HASH
 	* reference http://deroko.phearless.org/dt_gnu_hash.txt
@@ -296,7 +315,7 @@ Module *loadModule( char const *name , ModuleSystem *system )
 			( uint8_t * )hash + 16 + bitmask_nwords * sizeof( size_t )
 		);
 		uint32_t *chains = buckets + num_buckets;
-		
+
 		int chain_index = 0;
 		for( i = 0; i < num_buckets; i++ )
 		{
@@ -324,9 +343,9 @@ Module *loadModule( char const *name , ModuleSystem *system )
 			}
 		}
 	}
-	
+
 	out->lib_handle = lib;
-	
+
 	out->methods_count = export_symbols_count;
 	out->methods = ( Method* )system->allocator->alloc( sizeof( Method ) * export_symbols_count );
 	out->next = NULL;
@@ -349,5 +368,5 @@ Module *loadModule( char const *name , ModuleSystem *system )
 	}
 	return out;
 	//symbol_table_size = ;
-	
+
 }
