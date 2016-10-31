@@ -30,7 +30,7 @@ void removeDependencies( ModuleSystem *system ,  Module *module )
 				dep->prev->next = next;
 				if( next )
 				{
-					next->prev = dep->prev->next;
+					next->prev = dep->prev;
 				}
 				system->allocator->free( dep );
 				dep = next;

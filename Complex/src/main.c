@@ -99,7 +99,7 @@ int drawModule( void *window , ModuleView *mv )
 			}
 		}
 	}
-	
+
 	drawText( window , mv->x , mv->y , mv->name );
 	drawText( window , mv->x , mv->y + text_size.y + 1 , msg );
 	return ret;
@@ -125,7 +125,7 @@ int update_flag = 1;
 Flow update( void *window , void *c )
 {
 	Context *ctx = ( Context* )c;
-	
+
 	ModuleView *mv = ctx->views;
 	char const *text = "left click to load; right click to unload; drag to move block;";
 	ivec2 text_size = getTextSize( window , text );
@@ -135,7 +135,7 @@ Flow update( void *window , void *c )
 	ModuleDependency *dep = ctx->system->dependency_head;
 	while( dep )
 	{
-		//printf( "%s->%s\n" , dep->src , dep->dst );
+		printf( "rendering dependency:%s->%s\n" , dep->src , dep->dst );
 		ModuleView *src_view = getViewByName( ctx->views , dep->src->name );
 		ModuleView *dst_view = getViewByName( ctx->views , dep->dst->name );
 		if( src_view && dst_view )
@@ -147,7 +147,7 @@ Flow update( void *window , void *c )
 			float mod = sqrtf( dirx * dirx + diry * diry );
 			dirx /= mod;
 			diry /= mod;
-			
+
 			drawLine( window , src_view->x , src_view->y , dst_view->x , dst_view->y );
 			drawLine( window , midx , midy , midx + ( int )( -diry * 10.0f - dirx * 10.0f + 0.5f ) ,
 			midy + ( int )( dirx * 10.0f - diry * 10.0f + 0.5f ) );
@@ -163,6 +163,7 @@ Flow update( void *window , void *c )
 		{
 			mv->module = getModuleByName( mv->name , ctx->system );
 		}
+		printf( "rendering module:%s\n" , mv->name );
 		int callback = drawModule( window , mv );
 		if( callback == 1 )
 		{
@@ -194,7 +195,7 @@ int main( int argc , char **argv )
 		.dependency_head = NULL
 	};
 	ModuleView *views = initViews();
-	Context ctx = 
+	Context ctx =
 	{
 		.system = &system ,
 		.views = views
@@ -212,8 +213,8 @@ int main( int argc , char **argv )
 	void *window = createWindow( 100 , 100 , 512 , 512 , update , &ctx );
 	destroyWindow( window );
 	//releaseModuleByName( "c_mod2.so" , &system );
-	
-	
+
+
    return 0;
 }
 /*int main( int argc , char **argv )
@@ -222,7 +223,7 @@ int main( int argc , char **argv )
 	printComplex( c );
 	Complex a = { 0.0f , 2.0f };
 	printComplex( div( c , a ) );
-	
+
 	printComplexExponent( expComplex(
 		( Complex ){ 1.0f , 1.0f }
 	) );//1.414214 * e^i0.785398
@@ -238,6 +239,6 @@ int main( int argc , char **argv )
 	printf( "%f\n" , mod( ( Complex ){ 3.0f , 4.0f } ) );//5
 	printComplex( neg( ( Complex ){ 3.0f , 1.0f } ) );//{ r: -3.000000 i: -1.000000 }
 	printComplex( conjugate( ( Complex ){ 3.0f , 1.0f } ) );//{ r: 3.000000 i: -1.000000 }
-	
+
 	return 0;
 }*/
