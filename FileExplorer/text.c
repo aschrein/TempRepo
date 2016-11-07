@@ -228,6 +228,9 @@ void mergeLineBack( Text *text , uint32_t y )
         {
             line->prev->prev->next = new_line;
             new_line->prev = line->prev->prev;
+        } else
+        {
+            text->lines_head = new_line;
         }
         if( line->next )
         {

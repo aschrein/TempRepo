@@ -140,7 +140,7 @@ int textEditor()
         editor_state.cur_x = editor_state.es->cur_x;
         editor_state.cur_y = editor_state.es->cur_y;
     }
-    mvprintw( 0 , 0 , "ctrl-q to exit to directory view, ctrl-s to save changes  " );
+    mvprintw( 0 , 0 , "ctrl-q to exit to directory view, ctrl-s to save changes, ctrl-z/r undo redo  " );
     mvprintw( 1 , 0 , "current file:%s" , editor_state.cur_filename );
     /*
     ctrl-z 26
@@ -163,6 +163,7 @@ int textEditor()
 
     if( editor_state.cur_y < 0 ){ editor_state.cur_y = 0; }
     if( editor_state.cur_y < editor_state.offsety ){ editor_state.offsety = editor_state.cur_y; }
+    if( editor_state.cur_y >= editor_state.text->lines_count ){ editor_state.cur_y = editor_state.text->lines_count - 1; }
     if( editor_state.offsety < 0 ) editor_state.offsety = 0;
     if( editor_state.cur_y >= height + editor_state.offsety ){ editor_state.offsety++; }
     drawText( editor_state.text , panel_offsetx , panel_offsety , width , height, editor_state.offsetx , editor_state.offsety );
@@ -231,7 +232,7 @@ int drawDirectory()
     drawFrame( panel_offsetx - 1 , panel_offsety - 1 , width  , height );
     drawFrame( 0 , panel_offsety - 1 , 4 , height );
 
-    mvprintw( 0 , 0 , "ctrl-q to quit, enter to open file          " );
+    mvprintw( 0 , 0 , "ctrl-q to quit, enter to open file                                          " );
 
     DIR *d;
 	struct dirent *dir;
@@ -272,17 +273,17 @@ int drawDirectory()
             {
                 if( dir->d_type == DT_DIR )
                 {
-                    mvprintw( panel_offsety + y , 4 , "/" );
+                    mvprintw( panel_offsety + y , panel_offsetx , "%s/" , dir->d_name );
                 } else
                 {
-                    mvprintw( panel_offsety + y , 4 , "*" );
+                    mvprintw( panel_offsety + y , panel_offsetx , "%s*" , dir->d_name );
                 }
-                mvprintw( panel_offsety + y , panel_offsetx , dir->d_name );
+
                 mvprintw( panel_offsety + y , 1 , "   " );
                 mvprintw( panel_offsety + y , 1 , "%i" , dir_state.max_file );
                 int len = strlen( dir->d_name );
                 int i;
-                for( i = len; i < width - 1; i++ )
+                for( i = len + 1; i < width - 1; i++ )
                 {
                     mvprintw( panel_offsety + y , panel_offsetx + i , " " );
                 }
