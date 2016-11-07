@@ -89,11 +89,15 @@ static void destroyLine( Line *line )
     }
     free( line );
 }
-Line *removeLine( Text *text , uint32_t pos )
+void removeLine( Text *text , uint32_t pos )
 {
-    if( pos < text->lines_count )
+    //if( pos < text->lines_count )
     {
         Line *line = getLine( text , pos );
+        if( !line )
+        {
+            return;
+        }
         if( line->next )
         {
             line->next->prev = line->prev;
@@ -111,7 +115,8 @@ Line *removeLine( Text *text , uint32_t pos )
 Line *insertLine( Text *text , uint32_t pos )
 {
     Line *new_line = createLine();
-    if( pos < text->lines_count )
+    int lines_count = getLinesCount( text );
+    if( pos < lines_count )
     {
         Line *line = getLine( text , pos );
         if( line->prev )
@@ -125,7 +130,6 @@ Line *insertLine( Text *text , uint32_t pos )
             new_line->next = text->lines_head;
             text->lines_head = new_line;
         }
-        text->lines_count++;
     } else
     {
         if( pos == 0 )
@@ -133,8 +137,8 @@ Line *insertLine( Text *text , uint32_t pos )
             text->lines_head = new_line;
         } else
         {
-            int i = text->lines_count;
-            Line *tail = getLine( text , text->lines_count - 1 );
+            int i = lines_count;
+            Line *tail = getLine( text , lines_count - 1 );
             if( !tail )
             {
                 tail = createLine();
@@ -149,7 +153,6 @@ Line *insertLine( Text *text , uint32_t pos )
                 tail = new_line;
             }
         }
-        text->lines_count = pos + 1;
     }
 }
 size_t getTextLength( Text *text )
@@ -239,7 +242,6 @@ void mergeLineBack( Text *text , uint32_t y )
         }
         destroyLine( line );
         destroyLine( line->prev );
-        text->lines_count--;
     }
 }
 void divedeLineForward( Text *text , uint32_t x , uint32_t y )
@@ -259,7 +261,6 @@ void divedeLineForward( Text *text , uint32_t x , uint32_t y )
         }
         line->next = new_line;
         new_line->prev = line;
-        text->lines_count++;
     }
 }
 char removeCharacterInText( Text *text , uint32_t x , uint32_t y )
@@ -281,7 +282,6 @@ Text *loadText( char const *filename )
         Line *cur_line = createLine();
         out = ( Text* )malloc( sizeof( Text ) );
         out->lines_head = cur_line;
-        out->lines_count = 1;
         char buf[ 0x100 + 1 ];
         int buf_len = 0 , i = 0;
         while( ( buf_len = read( fd , buf , 0x100 ) ) > 0 )
@@ -301,7 +301,6 @@ Text *loadText( char const *filename )
                     cur_line->next = new_line;
                     new_line->prev = cur_line;
                     cur_line = new_line;
-                    out->lines_count++;
                 } else
                 {
                     /*if( c == '\t' )

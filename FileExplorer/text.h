@@ -14,8 +14,18 @@ static inline void strcopy( char *dst , char const *src ){ while( *dst++ = *src+
 typedef struct
 {
     Line *lines_head;
-    uint32_t lines_count;
 } Text;
+static inline int getLinesCount( Text *text )
+{
+    Line *head = text->lines_head;
+    int count = 0;
+    while( head )
+    {
+        count++;
+        head = head->next;
+    }
+    return count;
+}
 void insertCharacter( Line * , uint32_t , char );
 inline static void addCharacter( Line *line , char c )
 {
@@ -28,10 +38,10 @@ char removeCharacter( Line* , uint32_t );
 char removeCharacterInText( Text* , uint32_t , uint32_t );
 Line *getLine( Text * , uint32_t );
 Line *insertLine( Text * , uint32_t );
-Line *removeLine( Text * , uint32_t );
+void removeLine( Text * , uint32_t );
 inline static Line *addLine( Text *text )
 {
-    return insertLine( text , text->lines_count );
+    return insertLine( text , getLinesCount( text ) );
 }
 size_t getTextLength( Text * );
 void bake( Text * , char * );

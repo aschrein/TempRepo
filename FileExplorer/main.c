@@ -127,7 +127,7 @@ int textEditor()
             size_t chars_count = getTextLength( editor_state.text );
             char *chars = ( char * )malloc( chars_count );
             bake( editor_state.text , chars );
-            int fd = open( editor_state.cur_filename , O_WRONLY );
+            int fd = open( editor_state.cur_filename , O_WRONLY | O_TRUNC );
             write( fd , chars , chars_count );
             close( fd );
             free( chars );
@@ -163,7 +163,7 @@ int textEditor()
 
     if( editor_state.cur_y < 0 ){ editor_state.cur_y = 0; }
     if( editor_state.cur_y < editor_state.offsety ){ editor_state.offsety = editor_state.cur_y; }
-    if( editor_state.cur_y >= editor_state.text->lines_count ){ editor_state.cur_y = editor_state.text->lines_count - 1; }
+    if( editor_state.cur_y >= getLinesCount( editor_state.text ) ){ editor_state.cur_y = getLinesCount( editor_state.text ) - 1; }
     if( editor_state.offsety < 0 ) editor_state.offsety = 0;
     if( editor_state.cur_y >= height + editor_state.offsety ){ editor_state.offsety++; }
     drawText( editor_state.text , panel_offsetx , panel_offsety , width , height, editor_state.offsetx , editor_state.offsety );
