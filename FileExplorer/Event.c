@@ -62,53 +62,59 @@ static void fireEvent( EventSystem *system , Event *event , Event *inv )
 EventSystem *createEventSystem( Text *text )
 {
     EventSystem *out = ( EventSystem* )malloc( sizeof( EventSystem ) );
-    out->pos = -1;
-    out->length = 0;
+    memset( out , 0 , sizeof( EventSystem ) );
     out->text = text;
-    out->cur_x = 0;
-    out->cur_y = 0;
     return out;
 }
-//void destroyEventSystem( EventSystem * );
+void destroyEventSystem( EventSystem *system )
+{
+    free( system );
+}
 void applyEvent( EventSystem *system, uint32_t x , uint32_t y , uint32_t data , EventType type )
 {
-    if( system->pos == 0x100 - 1 && system->length )
+    if( POS( system->head + 1 ) == POS( system->tail ) )
     {
-        int i;
-        for( i = 0; i < system->length - 1; i++ )
-        {
-            system->events[ i ] = system->events[ i + 1 ];
-        }
-        system->pos--;
-        system->length--;
+        system->tail = POS( system->tail + 1 );
     }
-    system->pos++;
-    system->length++;
-    Event *event = system->events + system->pos;
-    Event *inv = system->inverses + system->pos;
+    Event *event = system->events + system->head;
+    Event *inv = system->inverses + system->head;
+
     memset( event , 0 , sizeof( Event ) );
     memset( inv , 0 , sizeof( Event ) );
     event->type = type;
     event->cur_x = x;
     event->cur_y = y;
     event->data = data;
+
+    system->head = POS( system->head + 1 );
+    uint32_t cursor = system->head;
+    while( cursor != system->tail )
+    {
+        Event *event = system->events + cursor;
+        event->type = 0;
+        cursor = POS( cursor + 1 );
+    }
     fireEvent( system , event , inv );
 }
 void undo( EventSystem *system )
 {
-    if( system->pos + 1 )
+    if( system->head != system->tail )
     {
-        Event *event = system->inverses + system->pos;
+        system->head = POS( system->head - 1 );
+        Event *event = system->inverses + system->head;
         fireEvent( system , event , NULL );
-        system->pos--;
     }
 }
 void redo( EventSystem *system )
 {
-    if( system->pos < system->length - 1 )
+    if( POS( system->head + 1 ) != POS( system->tail ) )
     {
-        system->pos++;
-        Event *event = system->events + system->pos;
-        fireEvent( system , event , NULL );
+        uint32_t new_head = POS( system->head + 1 );
+        Event *event = system->events + system->head;
+        if( event->type )
+        {
+            system->head = new_head;
+            fireEvent( system , event , NULL );
+        }
     }
 }

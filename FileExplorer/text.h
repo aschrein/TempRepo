@@ -9,6 +9,8 @@ typedef struct Line_t
     uint32_t length;
     struct Line_t *next , *prev;
 } Line;
+static inline int strCmp( char const *a , char const *b ){ while( *a != '\0' && *a++ == *b++ ); return *a == *b && *b == '\0'; }
+static inline void strcopy( char *dst , char const *src ){ while( *dst++ = *src++ ); }
 typedef struct
 {
     Line *lines_head;

@@ -158,10 +158,10 @@ size_t getTextLength( Text *text )
     size_t size = 0;
     while( line )
     {
-        size += line->length;
+        size += line->length + 1;
         line = line->next;
     }
-    return size;
+    return size + 1;
 }
 static void bakeLine( Line *line , char *chars )
 {
@@ -174,8 +174,11 @@ void bake( Text *text , char *chars )
     {
         bakeLine( line , chars );
         chars += line->length;
+        *chars++ = '\n';
+
         line = line->next;
     }
+    *chars++ = '\0';
 }
 Text *createText( char const *chars )
 {
