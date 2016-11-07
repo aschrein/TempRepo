@@ -239,6 +239,7 @@ void mergeLineBack( Text *text , uint32_t y )
         }
         destroyLine( line );
         destroyLine( line->prev );
+        text->lines_count--;
     }
 }
 void divedeLineForward( Text *text , uint32_t x , uint32_t y )
@@ -258,6 +259,7 @@ void divedeLineForward( Text *text , uint32_t x , uint32_t y )
         }
         line->next = new_line;
         new_line->prev = line;
+        text->lines_count++;
     }
 }
 char removeCharacterInText( Text *text , uint32_t x , uint32_t y )
