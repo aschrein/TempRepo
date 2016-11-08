@@ -128,7 +128,7 @@ int textEditor()
             char *chars = ( char * )malloc( chars_count );
             bake( editor_state.text , chars );
             int fd = open( editor_state.cur_filename , O_WRONLY | O_TRUNC );
-            write( fd , chars , chars_count );
+            write( fd , chars , chars_count - 1 );
             close( fd );
             free( chars );
         }
