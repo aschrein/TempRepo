@@ -15,7 +15,7 @@ typedef struct
 {
     Line *lines_head;
 } Text;
-static inline int getLinesCount( Text *text )
+static int getLinesCount( Text *text )
 {
     Line *head = text->lines_head;
     int count = 0;
@@ -27,7 +27,7 @@ static inline int getLinesCount( Text *text )
     return count;
 }
 void insertCharacter( Line * , uint32_t , char );
-inline static void addCharacter( Line *line , char c )
+static void addCharacter( Line *line , char c )
 {
     return insertCharacter( line , line->length , c );
 }

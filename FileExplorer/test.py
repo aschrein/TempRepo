@@ -6,4 +6,30 @@ case 26://ctrl-z
     editor_state.cur_y = editor_state.es->cur_y;
 }
 break;
-case 18://ctr
+case 18://c
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
