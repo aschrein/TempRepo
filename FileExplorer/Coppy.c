@@ -9,7 +9,7 @@ static inline void strcopy( char *dst , char const *src ){ while( *dst++ = *src+
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <linux/futex.h>
-
+#include <sys/mman.h>
 #include <sched.h>
 void initWindow()
 {
@@ -31,6 +31,7 @@ typedef struct
 	size_t block_size;
 	void *buffer;
 	void *stack;
+	size_t stack_size;
 	int th_pid;
 } CopyTask;
 int threadRoutine( void *data )
@@ -48,7 +49,7 @@ int threadRoutine( void *data )
 	while( len = read( task->src , task->buffer , task->block_size ) )
 	{
 		total_read += len;
-		write( task->dst , task->buffer , task->block_size );
+		write( task->dst , task->buffer , len );
 		task->percent_complete = ( total_read * 100 ) / file_size;
 		usleep( 1000 );
 	}
@@ -61,7 +62,8 @@ void createTask( CopyTask *task , int src_fd , int dst_fd , size_t stack_size , 
 {
 	task->src = src_fd;
 	task->dst = dst_fd;
-	task->stack = malloc( stack_size );
+	task->stack_size = stack_size;
+	task->stack = mmap( NULL , stack_size , PROT_READ | PROT_WRITE , MAP_PRIVATE | MAP_ANONYMOUS  , -1 , 0 );
 	task->buffer = malloc( block_size );
 	task->block_size = block_size;
 	task->th_pid = clone( threadRoutine , task->stack + stack_size - 1 , CLONE_VM | CLONE_FS , task );
@@ -70,7 +72,7 @@ void destroyTask( CopyTask task )
 {
 	waitpid( task.th_pid , NULL , 0 );
 	free( task.buffer );
-	free( task.stack );
+	munmap( task.stack , task.stack_size );
 }
 int main( int argc , char **argv )
 {
@@ -97,7 +99,7 @@ int main( int argc , char **argv )
 		return -1;
 	}
 	CopyTask task = { 0 };
-	createTask( &task , in_fd , out_fd , 0x100000 , 0x10 );
+	createTask( &task , in_fd , out_fd , 0x1000 , 0x10 );
 	initWindow();
     while( !task.complete )
     {
