@@ -61,6 +61,8 @@ int drawDirectory()
         nodelay( stdscr , 0 );
     }
     int ch = getch();
+	//printf( "%i\n" , ch );
+	int copy = 0;
     switch( ch )
     {
         case KEY_UP:
@@ -82,6 +84,10 @@ int drawDirectory()
         {
             return 1;
         }
+		case 3:
+        {
+            copy = 1;
+        }
         break;
     }
     int width , height;
@@ -100,7 +106,7 @@ int drawDirectory()
     drawFrame( panel_offsetx - 1 , panel_offsety - 1 , width  , height );
     drawFrame( 0 , panel_offsety - 1 , 4 , height );
 
-    mvprintw( 0 , 0 , "ctrl-q to quit, enter to open file                                          " );
+    mvprintw( 0 , 0 , "ctrl-q to quit, enter to open file, ctrl-c to copy file                                        " );
 
     DIR *d;
 	struct dirent *dir;
@@ -159,6 +165,36 @@ int drawDirectory()
                         NULL
                     };
                     execv( "./Editor.out" , argv );
+                }
+            } else if( dir->d_type == DT_REG && dir_state.max_file == dir_state.cur_file && copy )
+            {
+				strcopy( dir_state.temp_buffer , dir_state.cur_directory );
+                int ptr = strlen( dir_state.cur_directory );
+                dir_state.temp_buffer[ ptr ] = '/';
+                strcopy( dir_state.temp_buffer + ptr + 1 , dir->d_name );
+                ptr += strlen( dir_state.temp_buffer );
+                realpath( dir_state.temp_buffer , dir_state.cur_filename );
+                releaseWindow();
+                int chpid = fork();
+                signal( SIGWINCH , SIG_IGN );
+                if( chpid > 0 )
+                {
+                    int status;
+                    {
+                        waitpid( chpid , &status , 0 );
+                    }
+                    dir_state.update = 1;
+                    initWindow();
+                    return 0;
+                } else if( chpid == 0 )
+                {
+                    char const **argv[ 3 ] =
+                    {
+                        "./Coppy.out" ,
+                        dir_state.cur_filename ,
+                        NULL
+                    };
+                    execv( "./Coppy.out" , argv );
                 }
             }
             if( y >= 0 )

@@ -167,7 +167,7 @@ int textEditor()
 
     if( editor_state.cur_y < 0 ){ editor_state.cur_y = 0; }
     if( editor_state.cur_y < editor_state.offsety ){ editor_state.offsety = editor_state.cur_y; }
-    if( editor_state.cur_y >= getLinesCount( editor_state.text ) ){ editor_state.cur_y = getLinesCount( editor_state.text ) - 1; }
+    if( editor_state.cur_y > getLinesCount( editor_state.text ) ){ editor_state.cur_y = getLinesCount( editor_state.text ); }
     if( editor_state.offsety < 0 ) editor_state.offsety = 0;
     if( editor_state.cur_y >= height + editor_state.offsety ){ editor_state.offsety++; }
     drawText( editor_state.text , panel_offsetx , panel_offsety , width , height, editor_state.offsetx , editor_state.offsety );
