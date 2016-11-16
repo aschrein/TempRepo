@@ -34,6 +34,7 @@ int addUser( MessageBoard *board )
 		if( ulist->ids[ i ] < 0 )
 		{
 			ulist->ids[ i ] = 1;
+			sem_post( &board->semaphore );
 			return i;
 		}
 	}
