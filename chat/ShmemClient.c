@@ -21,8 +21,7 @@ int main( int argc , char **argv )
 	{
 		MessageBoard *msg_board = mmap( NULL , SHARED_MEM_SIZE , PROT_READ | PROT_WRITE , MAP_SHARED , shared_fd , 0 );
 		close( shared_fd );
-		UserList *ulist = getUserList( msg_board );
-		int usr_id = addUser( ulist );
+		int usr_id = addUser( msg_board );
 		char buffer[ 0x100 + 1 ];
 		while( working )
 		{
@@ -47,7 +46,7 @@ int main( int argc , char **argv )
 				addMessage( msg_board , usr_id , buffer );
 			}
 		}
-		removeUser( ulist , usr_id );
+		removeUser( msg_board , usr_id );
 		munmap( msg_board , SHARED_MEM_SIZE );
 	} else
 	{

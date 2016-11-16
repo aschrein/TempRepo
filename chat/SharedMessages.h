@@ -24,8 +24,10 @@ UserList *getUserList( MessageBoard *msg_board )
 {
 	return ( char* )msg_board + USER_LIST_OFFSET;
 }
-int addUser( UserList *ulist )
+int addUser( MessageBoard *board )
 {
+	sem_wait( &board->semaphore );
+	UserList *ulist = getUserList( board );
 	int i;
 	for( i = 0; i < ulist->count; i++ )
 	{
@@ -36,12 +38,17 @@ int addUser( UserList *ulist )
 		}
 	}
 	ulist->ids[ ulist->count++ ] = 1;
-	return ulist->count - 1;
+	int id = ulist->count - 1;
+	sem_post( &board->semaphore );
+	return id;
 }
-void removeUser( UserList *ulist , int id )
+void removeUser( MessageBoard *board , int id )
 {
+	sem_wait( &board->semaphore );
+	UserList *ulist = getUserList( board );
 	ulist->ids[ id ] = -1;
 	while( ulist->count && ulist->ids[ ulist->count - 1 ] < 0 ) ulist->count--;
+	sem_post( &board->semaphore );
 }
 void addMessage( MessageBoard *board , int user_id , char *raw_msg )
 {
