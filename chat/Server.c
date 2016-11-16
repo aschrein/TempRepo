@@ -6,30 +6,12 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #define BUFFER_WIDTH 0x100
-#ifdef SHARED
-typedef struct
-{
-	int user_id;
-	int len;
-	char raw[];
-} MessageNode;
-typedef struct
-{
-	sem_t semaphore;
-	int msg_count;
-	MessageNode nodes[];
-}
-#else
 typedef struct Message_t
 {
 	char *msg;
 	struct Message_t *next , *prev;
 } Message;
-#endif
 typedef struct Task_t
 {
 	struct Task_t *next , *prev;
@@ -40,8 +22,8 @@ typedef struct Task_t
 } Task;
 typedef struct Server_t
 {
-	Task *task_head;
 	Message *msg_head;
+	Task *task_head;
 	pthread_mutex_t mutex;
 	pthread_cond_t garbage_signal;
 	int working;
@@ -181,7 +163,6 @@ void rendererRoutine( Task *task )
 	endwin();
 	task->working = 0;
 }
-#ifdef SHARED
 void addMessage( Server *server , int user_id , char *raw_msg )
 {
 	pthread_mutex_lock( &server->mutex );
@@ -201,27 +182,6 @@ void addMessage( Server *server , int user_id , char *raw_msg )
 	}
 	pthread_mutex_unlock( &server->mutex );
 }
-#else
-void addMessage( Server *server , int user_id , char *raw_msg )
-{
-	pthread_mutex_lock( &server->mutex );
-	Message *msg = ( Message* )malloc( sizeof( Message ) );
-	memset( msg , 0 , sizeof( Message ) );
-	msg->msg = ( char * )malloc( strlen( raw_msg ) + 0x10 );
-	sprintf( msg->msg , "%i:%s" , user_id , raw_msg );
-	if( !server->msg_head )
-	{
-		server->msg_head = msg;
-	} else
-	{
-		Message *cur = server->msg_head;
-		while( cur->next ) cur = cur->next;
-		cur->next = msg;
-		msg->prev = cur;
-	}
-	pthread_mutex_unlock( &server->mutex );
-}	
-#endif
 /*void removeMessage( Server *server , Message *msg )
 {
 	pthread_mutex_lock( &server->mutex );
@@ -284,13 +244,7 @@ void addTask( Server *server , void *routine , int socket )
 }
 int main( int argc , char **argv )
 {
-#ifdef SHARED
 	int sock = socket( AF_INET , SOCK_STREAM | SOCK_NONBLOCK , 0 );
-	int shared_fd = shm_open( "shared.data" , O_RDWR | O_CREAT | O_TRUNC , S_IRUSR | S_IWUSR );
-	ftruncate( shared_fd , 0x100000 );
-	void *shared_mem = mmap( NULL , 0x100000 , PROT_READ | PROT_WRITE , MAP_SHARED , shared_fd , 0 );
-	close( shared_fd );
-#endif
 	if( sock < 0 )
 	{
 		perror( "could not create socket" );
@@ -357,9 +311,6 @@ int main( int argc , char **argv )
 	pthread_cond_destroy( &server->garbage_signal );
 	pthread_mutex_destroy( &server->mutex );
 	free( server );
-#ifdef SHARED
-	munmap( shared_mem , 0x100000 );
-	shm_unlink( "shared.data" );
-#endif
+	printf( "exited normalliy\n" );
 	return 0;
 }

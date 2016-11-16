@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "SharedMessages.h"
+#include <sys/signal.h>
+#include <sys/select.h>
 int working = 1;
 void release()
 {
@@ -13,18 +16,13 @@ void release()
 int main( int argc , char **argv )
 {
 	signal( SIGINT , release );
-	int sock = socket( AF_INET , SOCK_STREAM , 0 );
-	struct sockaddr_in sa =
+	int shared_fd = shm_open( "shared.data" , O_RDWR , 0 );
+	if( shared_fd > 0 )
 	{
-		sin_family : AF_INET ,
-		sin_port : htons( 8080 ) ,
-		sin_addr : { s_addr : inet_addr( "127.0.0.1" ) }
-	};
-	if( connect( sock , ( struct sockaddr* )&sa , sizeof( sa ) ) )
-	{
-		perror( "couldnot connect to server" );
-	} else
-	{
+		MessageBoard *msg_board = mmap( NULL , SHARED_MEM_SIZE , PROT_READ | PROT_WRITE , MAP_SHARED , shared_fd , 0 );
+		close( shared_fd );
+		UserList *ulist = getUserList( msg_board );
+		int usr_id = addUser( ulist );
 		char buffer[ 0x100 + 1 ];
 		while( working )
 		{
@@ -46,10 +44,14 @@ int main( int argc , char **argv )
 			{
 				int len = read( 0 , buffer , 0x100 );
 				buffer[ len ] = 0;
-				send( sock , buffer , len , 0 );
+				addMessage( msg_board , usr_id , buffer );
 			}
 		}
+		removeUser( ulist , usr_id );
+		munmap( msg_board , SHARED_MEM_SIZE );
+	} else
+	{
+		perror( "failed to open shared mem file" );
 	}
-	close( sock );
 	return 0;
 }
