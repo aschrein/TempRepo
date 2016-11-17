@@ -1,11 +1,13 @@
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/shm.h>
 #include <fcntl.h>
+
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "SharedMessages.h"
 #include <sys/signal.h>
+#include <sys/select.h>
 int working = 1;
 void release()
 {
@@ -14,18 +16,13 @@ void release()
 int main( int argc , char **argv )
 {
 	signal( SIGINT , release );
-	int sock = socket( AF_INET , SOCK_STREAM , 0 );
-	struct sockaddr_in sa =
+	key_t key = ftok( "/shared_mem" , 0 );
+	int shared_fd = shmget( key , SHARED_MEM_SIZE , IPC_CREAT | S_IRUSR | S_IWUSR );
+	if( shared_fd > 0 )
 	{
-		sin_family : AF_INET ,
-		sin_port : htons( 8080 ) ,
-		sin_addr : { s_addr : inet_addr( "127.0.0.1" ) }
-	};
-	if( connect( sock , ( struct sockaddr* )&sa , sizeof( sa ) ) )
-	{
-		perror( "couldnot connect to server" );
-	} else
-	{
+		MessageBoard *msg_board = shmat( shared_fd , NULL , 0 );
+		
+		int usr_id = addUser( msg_board );
 		char buffer[ 0x100 + 1 ];
 		while( working )
 		{
@@ -46,15 +43,16 @@ int main( int argc , char **argv )
 			if( FD_ISSET( 0 , &s ) )
 			{
 				int len = read( 0 , buffer , 0x100 );
-				if( len <= 0 )
-				{
-					break;
-				}
 				buffer[ len ] = 0;
-				send( sock , buffer , len , 0 );
+				addMessage( msg_board , usr_id , buffer );
 			}
 		}
+		removeUser( msg_board , usr_id );
+		shmdt( msg_board );
+		close( shared_fd );
+	} else
+	{
+		perror( "failed to open shared mem file" );
 	}
-	close( sock );
 	return 0;
 }
