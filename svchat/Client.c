@@ -47,7 +47,7 @@ int main( int argc , char **argv )
 			}
 			if( FD_ISSET( 0 , &s ) )
 			{
-				int len = read( 0 , &blob.data[ 0 ] , 0x100 );
+				int len = read( 0 , &blob.data[ 0 ] , MAX_MESSAGE_LEN );
 				if( len <= 0 )
 				{
 					break;
