@@ -119,6 +119,10 @@ int main( int argc , char **argv )
 			}
 		}
 		int num = select( max + 1 , &s , NULL , NULL , &timeval );
+		if( !working )
+		{
+			break;
+		}
 		if( FD_ISSET( tcp_sock , &s ) )
 		{
 			int client_sock = accept( tcp_sock ,  NULL , NULL );
@@ -184,6 +188,7 @@ int main( int argc , char **argv )
 			}
 		}
 	}
+	printf( "exited normalliy\n" );
 	for( i = 0; i < tcp_clients_count; i++ )
 	{
 		if( tcp_clients[ i ] > 0 )
@@ -193,6 +198,6 @@ int main( int argc , char **argv )
 	}
 	close( tcp_sock );
 	close( udp_sock );
-	printf( "exited normalliy\n" );
+	
 	return 0;
 }
