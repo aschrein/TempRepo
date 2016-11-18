@@ -46,6 +46,12 @@ int main( int argc , char **argv )
 	{
 		printf( "invalid connection type\n" );
 	}
+	if( sock <= 0 )
+	{
+		perror( "error creating socket\n" );
+		return -1;
+	}
+	printf( "please enter command\n" );
 	{
 		char buffer[ 0x100 + 1 ];
 		while( working )
@@ -78,7 +84,11 @@ int main( int argc , char **argv )
 					send( sock , buffer , len , 0 );
 				} else
 				{
-					sendto( sock , buffer , len , 0 , ( struct sockaddr * )&sa , sizeof( sa ) );
+					int err = sendto( sock , buffer , len , 0 , ( struct sockaddr * )&sa , sizeof( sa ) );
+					if( err <= 0 )
+					{
+						printf( "error sending udp data\n" );
+					}
 				}
 			}
 			if( FD_ISSET( sock , &s ) )
