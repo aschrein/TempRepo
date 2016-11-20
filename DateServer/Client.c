@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <poll.h>
 #include <sys/signal.h>
 int working = 1;
 void release()
@@ -54,24 +55,31 @@ int main( int argc , char **argv )
 	printf( "please enter command\n" );
 	{
 		char buffer[ 0x100 + 1 ];
+		struct pollfd pollfds[ 2 ];
 		while( working )
 		{
-			struct timeval timeval =
+			//http://man7.org/linux/man-pages/man2/poll.2.html
+			int req_mask = POLLIN | POLLPRI;
+			pollfds[ 0 ] = ( struct pollfd )
 			{
-				tv_sec : 0 ,
-				tv_usec : 10 * 1000
+				fd: sock ,
+				events: req_mask ,
+				revents: 0
 			};
-			fd_set s;
-			FD_ZERO( &s );
-			FD_SET( 0 , &s );
-			FD_SET( sock , &s );
-			int num = select( sock + 1 , &s , NULL , NULL , &timeval );
+			pollfds[ 1 ] = ( struct pollfd )
+			{
+				fd: 0 ,
+				events: req_mask ,
+				revents: 0
+			};
+			int num = poll( pollfds , 2 , 100 );
 			if( !working )
 			{
 				printf( "\n" );
 				break;
 			}
-			if( FD_ISSET( 0 , &s ) )
+			
+			if( pollfds[ 1 ].revents & req_mask )
 			{
 				int len = read( 0 , buffer , 0x100 );
 				if( len <= 0 )
@@ -91,7 +99,7 @@ int main( int argc , char **argv )
 					}
 				}
 			}
-			if( FD_ISSET( sock , &s ) )
+			if( pollfds[ 0 ].revents & req_mask )
 			{
 				int len;
 				if( ctype == 0 )
