@@ -62,7 +62,7 @@ namespace SchreinerA
 		}
 		bool operator==( vec3 const &a ) const
 		{
-			return ( *this - a ).mod2() < MIN;
+			return ( *this - a ).mod() / ( 1.0 + a.mod() ) / EPS < 10.0;
 		}
 	};
 	struct plane
@@ -70,7 +70,7 @@ namespace SchreinerA
 		vec3 o , n;
 		bool contains( vec3 const &p ) const
 		{
-			return abs( ( p - o ) * n ) < MIN;
+			return abs( ( p - o ) * n ) / ( 1.0 + p.mod() ) / EPS < 10.0;
 		}
 		vec3 project( vec3 const &p ) const
 		{
@@ -81,7 +81,7 @@ namespace SchreinerA
 			vec3 v = ( b - a ).norm();
 			double prj = -n * ( a - o );
 			double dot = v * n;
-			if( abs( dot ) > MIN )
+			if( abs( dot / prj ) > EPS * 10.0 )
 			{
 				double t = prj / dot;
 				if( t <= 0.0 )
@@ -151,13 +151,15 @@ namespace SchreinerA
 				vec3 v1 = ( b - a ).norm();
 				double det = v0.x * v1.y - v1.x * v0.y;
 				vec3 dp = a - o;
-				if( abs( det ) > MIN )
+				double mod0 = ( e - o ).mod();
+				double mod1 = ( a - b ).mod();
+				if( abs( det ) > EPS )
 				{
 					double t0 = ( v1.y * dp.x - v1.x * dp.y ) / det;
 					double t1 = -( -v0.y * dp.x + v0.x * dp.y ) / det;
 					return
-						t0 >= -MIN && t0 <= ( e - o ).mod() + MIN &&
-						t1 >= -MIN && t1 <= ( a - b ).mod() + MIN
+						t0 >= -EPS * mod0 && t0 <= mod0 * ( 1.0 + EPS ) &&
+						t1 >= -EPS * mod1 && t1 <= mod1 * ( 1.0 + EPS )
 						;
 				} else
 				{
@@ -165,8 +167,8 @@ namespace SchreinerA
 					double t0 = ( v1.z * dp.y - v1.y * dp.z ) / det;
 					double t1 = -( -v0.z * dp.y + v0.y * dp.z ) / det;
 					return
-						t0 >= -MIN && t0 <= ( e - o ).mod() + MIN &&
-						t1 >= -MIN && t1 <= ( a - b ).mod() + MIN
+						t0 >= -EPS * mod0 && t0 <= mod0 * ( 1.0 + EPS ) &&
+						t1 >= -EPS * mod1 && t1 <= mod1 * ( 1.0 + EPS )
 						;
 				}
 			} else
@@ -277,7 +279,7 @@ int main( int argc , char **argv )
 	using namespace SchreinerA;
 	double triangles[] =
 	{
-		//0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 ,
+		0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 ,
 		//0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , nan( "" ) ,
 		//0.0 , 0.0 , 0.0 , std::numeric_limits<double>::infinity() , 0.0 , 0.0 , 0.0 , 0.0 , nan( "" ) ,
 		//0.0 , 0.0 , 0.0 , 1.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 ,
@@ -285,8 +287,8 @@ int main( int argc , char **argv )
 		//1.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 , 1.0 , 1.0 , 1.0 ,
 		//1.0 , 0.0 , 1.0 , 0.0 , 1.0 , 1.0 , 0.0 , 0.0 , -1.0 ,
 		//0.0 , 0.0 , 1.0 , 0.0 , 1.0 , -1.0 , 1.0 , 0.0 , -1.0 ,
-		0.5 , -1.0 , 0.5 , 0.5 , 1.0 , 0.5 , 0.5 , 0.0 , 0.5 ,
-		0.0 , 0.0 , 0.0 , 0.5 , 0.0 , 0.4 , 2.0 , 0.0 , 1.0 ,
+		0.5 , -1.0 , 0.5 , 0.5 , 1.0 , 0.5 , 0.5 , 0.0 , 1.5 ,
+		0.0 , 0.0 , 0.0 , 0.5 , 0.0 , 0.5 , 2.0 , 0.0 , 2.0 ,
 		
 	};
 	double dphi = acos( -1.0 ) / 32;
