@@ -120,6 +120,14 @@ namespace SchreinerA
 		vec3 o , e;
 		bool intersects( vec3 const &a ) const
 		{
+			if( a == o || a == e )
+			{
+				return true;
+			}
+			if( o == e )
+			{
+				return false;
+			}
 			return abs(
 				( ( a - e ).mod() +
 				( a - o ).mod() ) /
