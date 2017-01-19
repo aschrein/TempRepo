@@ -185,7 +185,7 @@ namespace SchreinerA
 			//degenerate cases
 			if( o == e )//o->e is point
 			{
-				if( c == a )//triangle is line a->b
+				if( edge{ a , b }.intersects( c ) )//triangle is line a->b
 				{
 					if( b == a )//a->b is point
 					{
@@ -194,21 +194,18 @@ namespace SchreinerA
 					{
 						return edge{ a , b }.intersects( o );
 					}
+				} else if( edge{ a , c }.intersects( b ) )//triangle is line a->c
+				{
+					return edge{ a , c }.intersects( o );
+				} else if( edge{ b , c }.intersects( a ) )//triangle is line b->c
+				{
+					return edge{ b , c }.intersects( o );
 				} else
 				{
-					if( b == c )//triangle is line a->b
-					{
-						return edge{ a , b }.intersects( o );
-					} else if( a == b )//triangle is line a->c
-					{
-						return edge{ a , c }.intersects( o );
-					} else
-					{
-						return triangle{ a , b , c }.contains( o );
-					}
+					return triangle{ a , b , c }.contains( o );
 				}
 			}
-			if( c == a )//triangle is line a->b
+			if( edge{ a , b }.intersects( c ) )//triangle is line a->b
 			{
 				if( b == a )//a->b is point
 				{
@@ -217,22 +214,21 @@ namespace SchreinerA
 				{
 					return edge{ a , b }.intersects( o , e );
 				}
+			} else if( edge{ a , c }.intersects( b ) )//triangle is line a->c
+			{
+				return edge{ a , c }.intersects( o , e );
+			} else if( edge{ b , c }.intersects( a ) )//triangle is line b->c
+			{
+				return edge{ b , c }.intersects( o , e );
 			} else
 			{
-				if( b == c )//triangle is line a->b
-				{
-					return edge{ a , b }.intersects( o , e );
-				} else if( a == b )//triangle is line a->c
-				{
-					return edge{ a , c }.intersects( o , e );
-				} else
-				{
-					vec3 dir = ( e - o ).norm();
-					plane p = { a , ( ( b - a ) ^ ( c - a ) ).norm() };
-					vec3 proj = p.project( o , e );
-					return triangle{ a , b , c }.contains( proj );
-				}
+				vec3 dir = ( e - o ).norm();
+				plane p = { a , ( ( b - a ) ^ ( c - a ) ).norm() };
+				vec3 proj = p.project( o , e );
+				return triangle{ a , b , c }.contains( proj );
 			}
+
+			
 		}
 	};
 	bool intersects( double *a , double *b )
@@ -281,8 +277,8 @@ int main( int argc , char **argv )
 		//1.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 , 1.0 , 1.0 , 1.0 ,
 		//1.0 , 0.0 , 1.0 , 0.0 , 1.0 , 1.0 , 0.0 , 0.0 , -1.0 ,
 		//0.0 , 0.0 , 1.0 , 0.0 , 1.0 , -1.0 , 1.0 , 0.0 , -1.0 ,
-		0.5 , -1.0 , 0.5 , 0.5 , 1.0 , 0.5 , 0.5 , 0.0 , 1.0 ,
-		0.0 , 0.0 , 0.0 , 1.0 , 0.0 , 1.0 , 1.0 , 0.0 , 1.0 ,
+		0.5 , -1.0 , 0.5 , 0.5 , 1.0 , 0.5 , 0.5 , 0.0 , 0.5 ,
+		0.0 , 0.0 , 0.0 , 0.5 , 0.0 , 0.4 , 2.0 , 0.0 , 1.0 ,
 		
 	};
 	double dphi = acos( -1.0 ) / 32;
